@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+    
+<head>
+    <meta charset="utf-8" />
+    <title>Bricks </title>
+    <style>    
+              canvas { background: #eee; display: block; margin: 0 auto; }
+        
+    </style>
+</head>
+<body>
+ <!-- Creating Our Canvals Element -->
+<canvas id="Bricks" width="800" height="500"></canvas>
+
+<script>
+//Bellow Are the inition of our variables.
+//creating an object of canvals and attaching it to the element created earlier
+var canvas = document.getElementById("Bricks"); 
+//creating a 2D object (draw text, lines, boxes, circles)
+var ctx = canvas.getContext("2d");
+//Creating Possitionals for the ball
+var xPos = canvas.width/2; 
+var yPos = canvas.height-30;
+//Creating directionals for the ball 
+//dx left/right (negative number left possitive number right) (Bigger numbers = more speed) (Ideal 2-4)
+var dx = 4;
+//dy up/down  (negative number up possitive number down) (Bigger numbers = more speed) (Ideal 2-4)
+var dy = -4 ;
+//Setiing BallRadius 
+var ballRadius = 10;
+//Setting padddle Height and Width
+var paddleHeight = 10;
+var paddleWidth = 80;
+//Paddle X and Paddle Y initially will place our paddle in the midle bottom of our canvas
+//setting X possition for Paddle
+var paddleX = (canvas.width-paddleWidth) / 2;
+//setting Y possition for Paddle
+var paddleY =  canvas.height-paddleHeight;
+//setting 2 booleans for left and right movements. keys are not pressed at the moment so they are initially false.
+var keyleft = false;
+var keyright = false;
+var rightPushed = false;
+var leftPushed = false;
+//setting up player 
+var score = 0;
+var lives = 5;
+//setting up game rules for the bricks
+var brickWidth = 75;
+var brickHeight = 20;
+var brickPadding = 5;
+var brickleftoffstet = 30;
+var bricktopoffset = 3;
+var brickRows = 5;
+var brickCols = 10
+//creating a 2D array so we can create our board in the bellow function
+var bricks = [];
+for (var i = 0; i < brickCols; i++) {
+    bricks[i] = [];
+    for (var u = 0; u < brickRows; u++) {
+        bricks[i][u] = { x: 0, y: 0, status: 1 };
+    }
+}
+//creating a 2D Array to store our bricks.
+//the code bellow  will loop through brick collums and rows and create the needed bricks. (those brick object will use for collision control later on.)
+function drawBoard() {
+    //looping through our 2d brick array to draw our bircks and x y possitions of our canvas.
+    for (var i = 0; i < brickCols; i++) {
+        for (var u = 0; u < brickRows; u++) {
+            if (bricks[i][u].status == 1) {
+                var brickX = (i * (brickWidth + brickPadding)) + bricktopoffset;
+                var brickY = (u * (brickHeight + brickPadding)) + brickleftoffstet;
+                bricks[i][u].x = brickX;
+                bricks[i][u].y = brickY;
+                ctx.beginPath();
+                ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                ctx.fillStyle = "#FFA500";
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+    }
+}
+
+//collision control for our board brick objects. 
+function collisionControl(){ 
+     //we are goign to use again our 2D array to loop through brick objects.
+     for (var i = 0; i < brickCols; i++) {
+        for (var u = 0; u < brickRows; u++) {
+            var colite = bricks[i][u];
+            if (colite.status == 1) {
+                //the collition functions as follows.
+                //if the X possition of the ball (xPos) is greater than the x postion of the brick (colite.x) 
+                //and the X possition of the ball (xPos) is less than the x possition of the brick minus its Width (colite.x + brickWidth)
+                //and the Y possition of the ball (yPos) is greater than the y postion of the brick (colite.y) 
+                //and the Y Possition of the ball (ypos) is less than the posstion of the brick pluts its height (colite.y + brickHeigh)
+                //then we set our status to 0 and the next time our board refreshes (when we colite) the brick will be removed
+                if (xPos > colite.x && xPos < colite.x + brickWidth && yPos > colite.y && yPos< colite.y + brickHeight) {
+                    score++;
+                    if(score == brickCols*brickRows) {
+                        alert("WOW, GOOD JOB, you won...");
+                        document.location.reload();
+                    }
+                    dy = -dy;
+                    colite.status = 0;
+                }
+            }
+        }
+    }
+}
+//creating event Listeners and binding them to function handlers
+document.addEventListener("keydown", keyPushedHandler, false);
+document.addEventListener("keyup", keyReleasedHandler, false);
+//the following function will set our booleans to true whenever a key is Pushed 
+function keyPushedHandler(e) {
+    //if Right key is pusshed
+    if(e.key == "Right" || e.key == "ArrowRight") {
+        rightPushed = true;
+    }
+    //if Left key is pusshed
+    else if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPushed = true;
+    }
+}
+//the following function weill set our booleans to flase whenever we release the currently pushed key.
+function keyReleasedHandler(e) {
+    //if right key is released
+    if(e.key == "Right" || e.key == "ArrowRight") {
+        rightPushed = false;
+    }
+    //if Left key is released
+    else if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPushed = false;
+    }
+}
+//Function responsible for drawing the Ball  
+function drawBall() {
+    //The beginPath() method begins a path, or resets the current path.
+    ctx.beginPath();
+    //arc draws an arc *using pi to draw a circle. 
+    ctx.arc(xPos, yPos, ballRadius, 0, Math.PI*2);
+    //Drawing Crimson red
+    ctx.fillStyle = "#DC143C";
+    ctx.fill();
+    //closing the path
+    ctx.closePath();
+    
+}
+//Function Repsonsible for drawing the paddle
+function drawPaddle() {
+       //The beginPath() method begins a path, or resets the current path.
+    ctx.beginPath();
+    //rect draws a rectangle and possitions it to where we set our variables.
+    ctx.rect(paddleX,paddleY, paddleWidth, paddleHeight);
+    //drawing color to blue
+    ctx.fillStyle = "#0095DD";
+    ctx.fill();
+    //closing path
+    ctx.closePath();
+ 
+}
+function drawScore() {
+    ctx.font = "25px Arial";
+    ctx.strokeText("Score: "+score,5,25);
+}
+function drawLives() {
+    ctx.font = "25px Arial";
+    ctx.strokeText("Lives : "+lives,canvas.width-100,25)
+}
+function draw() {
+    //for each rect created , clear the last one so we will not leave an trail of or arc. 
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //calling drawBall function
+    drawBall();
+    //add +1 to the direction of each var
+    drawPaddle();
+    drawBoard();
+    collisionControl();
+    drawScore();
+    drawLives();
+    //following if statement is responsible for collition control
+    //it will not let the Ball leave the boundaries set for xAxxis and Width
+    if(xPos + dx > canvas.width-ballRadius || xPos + dx < ballRadius) {
+        dx = -dx;
+    }
+    if(yPos + dy < ballRadius) {
+        dy = -dy;
+    }
+    else if(yPos + dy > canvas.height-ballRadius) {
+        if(xPos > paddleX && xPos < paddleX + paddleWidth) {
+            dy = -dy;
+        } 
+        else {
+            lives--
+        if(!lives) {
+            alert("Ops, Out of lives. GAME OVER")
+            document.location.reload();
+        }
+        else {
+            xPos = canvas.width/2;
+            yPos = canvas.height-30;
+            dx=4;
+            dy= -4;
+            paddleX = (canvas.width-paddleWidth)/2;
+        }
+        }
+        
+        
+    }
+    //setting boundaries 
+    if(rightPushed && paddleX < canvas.width-paddleWidth) {
+        paddleX += 7;
+    }
+    else if(leftPushed && paddleX > 0) {
+        paddleX -= 7;
+    }
+    xPos += dx;
+    yPos += dy;
+    requestAnimationFrame(draw);
+}
+//calling draw variable and setting up Interval (15)
+ draw();
+</script>
+
+</body>
+</html>
